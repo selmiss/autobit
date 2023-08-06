@@ -114,14 +114,14 @@ def end_measure(start_measures, cpu_peak=True):
         torch.cuda.synchronize()
 
     # Time
-    measures = {"time": time.time() - start_measures["time"]}
+    measures = {"time/s": round(time.time() - start_measures["time"], 3)}
 
     gc.collect()
     if device == "cuda":
         torch.cuda.empty_cache()
 
     # CPU mem
-    measures["cpu"] = (psutil.Process().memory_info().rss - start_measures["cpu"]) / GB
+    measures["cpu/GiB"] = round((psutil.Process().memory_info().rss - start_measures["cpu"]) / GB, 3)
     if cpu_peak:
         measures["cpu-peak"] = (cpu_peak_tracker.stop() - start_measures["cpu"]) / GB
 
