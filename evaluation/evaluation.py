@@ -10,14 +10,14 @@ import os
 def classification_val(data_loader, model, checkpoint, device=None):
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model.eval()  # 设置模型为评估模式
+    model.to(device)
+    model.eval()
     model.load_state_dict(torch.load(checkpoint))
 
     # Compute the flops and params
     first_data = next(iter(data_loader))
     input_tmp, _ = first_data
-    flops, total_params = cul_complexity(model, input_tmp)
-    # model_summary(model, input_tmp)
+    flops, total_params = compute_complexity(model, input_tmp)
 
     # Inference to get accuracy
     correct = 0
@@ -34,6 +34,7 @@ def classification_val(data_loader, model, checkpoint, device=None):
     accuracy = 100 * correct / total
     end_measures = end_measure(start_measures, cpu_peak=False)
 
+    # Format the evaluation results
     result["accuracy"] = str(accuracy) + "%"
     result["total_params"] = total_params
     result["flops"] = flops
@@ -46,17 +47,13 @@ def classification_val(data_loader, model, checkpoint, device=None):
     return result
 
 
-def cul_complexity(model, input, device="cuda"):
+def compute_complexity(model, input_tmp, device="cuda"):
     from thop import profile
     from thop import clever_format
-    flops, params = profile(model, inputs=(input, ))
+    flops, _ = profile(model, inputs=(input_tmp, ))
+    params = sum([v.numel() for k, v in model.state_dict().items()])
     flops, params = clever_format([flops, params], "%.3f")
     return flops, params
-
-
-def model_summary(model, input, device="cpu"):
-    from torchsummary import summary
-    summary(model.to(device), input_size=(1, 32, 32), batch_size=-1)
 
 
 def format_size(size_bytes):
@@ -74,7 +71,12 @@ if __name__ == "__main__":
     data_loader = Cifar10DataLoader().build_loader("../datasets/cifar10")
     model_ori = CIFAR10Model()
     model_bnn = BnnCIFAR10Model()
+    from models.birealnet import birealnet18
+    model_bireal = birealnet18()
     ckp_path = "../checkpoints/demo1_bnn.pth"
+    # torch.save(model_ori.state_dict(), ckp_path)
+    # exit(0)
+
     ckp_path_ori = "../checkpoints/demo1.pth"
     # for name, param in model_ori.named_parameters():
     #     if param.requires_grad:  # 只打印需要梯度更新的参数
