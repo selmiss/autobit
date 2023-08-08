@@ -152,3 +152,12 @@ def log_measures(measures, description):
     print(f"- CPU RAM allocated: {measures['cpu']:.3f}GiB")
     if 'cpu-peak' in measures:
         print(f"- CPU RAM peak: {measures['cpu-peak']:.3f}GiB")
+
+
+def compute_complexity(model, input_tmp, device="cuda"):
+    from thop import profile
+    from thop import clever_format
+    flops, _ = profile(model, inputs=(input_tmp, ))
+    params = sum([v.numel() for k, v in model.state_dict().items()])
+    flops, params = clever_format([flops, params], "%.3f")
+    return flops, params
