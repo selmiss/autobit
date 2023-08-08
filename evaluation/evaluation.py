@@ -5,7 +5,7 @@ sys.path.append('..')
 from models.selmiss import CIFAR10Model, BnnCIFAR10Model
 from dataloader.cifar10 import Cifar10DataLoader
 from tabulate import tabulate
-from tools import start_measure, end_measure, log_measures, compute_complexity
+from .tools import start_measure, end_measure, log_measures, compute_complexity
 import os
 
 
@@ -19,7 +19,7 @@ def classification_val(data_loader, model, checkpoint, device=None):
     # Compute the flops and params
     first_data = next(iter(data_loader))
     input_tmp, _ = first_data
-    flops, total_params = compute_complexity(model, input_tmp)
+    flops, total_params = compute_complexity(model, input_tmp.to(device))
 
     # Inference to get accuracy
     correct = 0

@@ -13,7 +13,7 @@ class ClassificationTrainer(Trainer):
     data_loader: DataLoader = None
     ckp_load_path: str = ""
     ckp_save_path: str = ""
-    epoch: int = 10
+    epoch: int = 50
     lr: float = 0.001
     momentum: float = 0.9
     log_period = 10
@@ -26,6 +26,7 @@ class ClassificationTrainer(Trainer):
         self.ckp_save_path = ckp_save_path
         if device is not None:
             self.device = device
+        self.model.to(self.device)
 
     def train(self):
         criterion = nn.CrossEntropyLoss()
@@ -52,9 +53,9 @@ class ClassificationTrainer(Trainer):
                 optimizer.step()
 
                 running_loss += loss.item()
-                if cnt % self.log_period == self.log_period - 1:  # 每200个batch打印一次loss
-                    log_message = f'[{epoch + 1}, {cnt :5d}] loss: {running_loss / self.log_period:.3f}'
-                    torch.save(self.model.state_dict(), os.path.join(self.ckp_save_path, log_message))
-                    print(log_message)
-                    running_loss = 0.0
+                
+            log_message = f'{epoch + 1} loss: {running_loss / self.log_period:.3f}'
+            torch.save(self.model.state_dict(), os.path.join(self.ckp_save_path, log_message + ".pth"))
+            print(log_message)
+            running_loss = 0.0
 
