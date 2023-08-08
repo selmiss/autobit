@@ -5,7 +5,7 @@ sys.path.append('..')
 from models.selmiss import CIFAR10Model, BnnCIFAR10Model
 from dataloader.cifar10 import Cifar10DataLoader
 from tabulate import tabulate
-from tools import start_measure, end_measure, log_measures, format_size
+from tools import start_measure, end_measure, log_measures, compute_complexity
 import os
 
 
@@ -13,8 +13,8 @@ def classification_val(data_loader, model, checkpoint, device=None):
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
-    model.eval()
     model.load_state_dict(torch.load(checkpoint))
+    model.eval()
 
     # Compute the flops and params
     first_data = next(iter(data_loader))
@@ -49,13 +49,15 @@ def classification_val(data_loader, model, checkpoint, device=None):
     return result
 
 
-def compute_complexity(model, input_tmp, device="cuda"):
-    from thop import profile
-    from thop import clever_format
-    flops, _ = profile(model, inputs=(input_tmp.to(device), ))
-    params = sum([v.numel() for k, v in model.state_dict().items()])
-    flops, params = clever_format([flops, params], "%.3f")
-    return flops, params
+def format_size(size_bytes):
+    if size_bytes < 1024:
+        return f"{size_bytes} B"
+    elif size_bytes < 1024 * 1024:
+        return f"{size_bytes / 1024:.2f} KB"
+    elif size_bytes < 1024 * 1024 * 1024:
+        return f"{size_bytes / (1024 * 1024):.2f} MB"
+    else:
+        return f"{size_bytes / (1024 * 1024 * 1024):.2f} GB"
 
 
 if __name__ == "__main__":
