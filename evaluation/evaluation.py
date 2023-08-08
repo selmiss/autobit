@@ -71,14 +71,5 @@ if __name__ == "__main__":
     # exit(0)
 
     ckp_path_ori = "../checkpoints/demo1.pth"
-    # for name, param in model_ori.named_parameters():
-    #     if param.requires_grad:  # 只打印需要梯度更新的参数
-    #         print(f"Parameter Name: {name}")
-    #         print(f"Parameter Shape: {param.shape}")
-    #         print(f"Parameter Data Type: {param.dtype}")
-    #         print(f"Parameter Values:")
-    #         print(param)
-    #         print("-------------------------------")
-    # exit(0)
     classification_val(data_loader, model_ori, ckp_path_ori)
 

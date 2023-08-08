@@ -164,6 +164,7 @@ def format_size(size_bytes):
     else:
         return f"{size_bytes / (1024 * 1024 * 1024):.2f} GB"
 
+
 def compute_complexity(model, input_tmp, device="cuda"):
     from thop import profile
     from thop import clever_format
@@ -171,3 +172,16 @@ def compute_complexity(model, input_tmp, device="cuda"):
     params = sum([v.numel() for k, v in model.state_dict().items()])
     flops, params = clever_format([flops, params], "%.3f")
     return flops, params
+
+
+import torch.nn as nn
+def log_parameters(model: nn.Module, checkpoint):
+    model.load_state_dict(torch.load(checkpoint))
+    for name, param in model.named_parameters():
+        if param.requires_grad:
+            print(f"Parameter Name: {name}")
+            print(f"Parameter Shape: {param.shape}")
+            print(f"Parameter Data Type: {param.dtype}")
+            print(f"Parameter Values:")
+            print(param)
+            print("-------------------------------")
