@@ -4,6 +4,7 @@ from trainer.classification_trainer import ClassificationTrainer
 
 model = CIFAR10Model()
 dataloader = Cifar10DataLoader(train=True).build_loader("../datasets/cifar10")
-save_path = "../checkpoints/cifar10_trainer"
-trainer = ClassificationTrainer(model, dataloader, save_path)
+load_path = "../checkpoints/cifar10_trainer/50 loss: 0.301.pth"
+save_path = "../checkpoints/cifar10_quantization"
+trainer = ClassificationTrainer(model, dataloader, save_path, ckp_load_path=load_path)
 trainer.train()
