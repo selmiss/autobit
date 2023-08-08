@@ -1,9 +1,11 @@
 import torch
 from tqdm import tqdm
+import sys
+sys.path.append('..')
 from models.selmiss import CIFAR10Model, BnnCIFAR10Model
 from dataloader.cifar10 import Cifar10DataLoader
 from tabulate import tabulate
-from tools import start_measure, end_measure, log_measures
+from tools import start_measure, end_measure, log_measures, format_size
 import os
 
 
@@ -22,7 +24,7 @@ def classification_val(data_loader, model, checkpoint, device=None):
     # Inference to get accuracy
     correct = 0
     total = 0
-    start_measures = start_measure(cpu_peak=False)
+    start_measures = start_measure(cpu_peak=True)
     with torch.no_grad():  # 禁用梯度计算
         for items, labels in tqdm(data_loader):
             items, labels = items.to(device), labels.to(device)
@@ -32,11 +34,11 @@ def classification_val(data_loader, model, checkpoint, device=None):
             correct += (predicted == labels).sum().item()
     result = dict()
     accuracy = 100 * correct / total
-    end_measures = end_measure(start_measures, cpu_peak=False)
+    end_measures = end_measure(start_measures, cpu_peak=True)
 
     # Format the evaluation results
     result["accuracy"] = str(accuracy) + "%"
-    result["total_params"] = total_params
+    result["params"] = total_params
     result["flops"] = flops
     result["model_size"] = format_size(os.path.getsize(checkpoint))
     result.update(end_measures)
@@ -50,21 +52,10 @@ def classification_val(data_loader, model, checkpoint, device=None):
 def compute_complexity(model, input_tmp, device="cuda"):
     from thop import profile
     from thop import clever_format
-    flops, _ = profile(model, inputs=(input_tmp, ))
+    flops, _ = profile(model, inputs=(input_tmp.to(device), ))
     params = sum([v.numel() for k, v in model.state_dict().items()])
     flops, params = clever_format([flops, params], "%.3f")
     return flops, params
-
-
-def format_size(size_bytes):
-    if size_bytes < 1024:
-        return f"{size_bytes} B"
-    elif size_bytes < 1024 * 1024:
-        return f"{size_bytes / 1024:.2f} KB"
-    elif size_bytes < 1024 * 1024 * 1024:
-        return f"{size_bytes / (1024 * 1024):.2f} MB"
-    else:
-        return f"{size_bytes / (1024 * 1024 * 1024):.2f} GB"
 
 
 if __name__ == "__main__":
@@ -73,8 +64,8 @@ if __name__ == "__main__":
     model_bnn = BnnCIFAR10Model()
     from models.birealnet import birealnet18
     model_bireal = birealnet18()
-    ckp_path = "../checkpoints/demo1_bnn.pth"
-    # torch.save(model_ori.state_dict(), ckp_path)
+    ckp_path = "../checkpoints/demo1.pth"
+    torch.save(model_ori.state_dict(), ckp_path)
     # exit(0)
 
     ckp_path_ori = "../checkpoints/demo1.pth"

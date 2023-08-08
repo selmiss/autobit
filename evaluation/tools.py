@@ -81,7 +81,7 @@ cpu_peak_tracker = PeakCPUMemory()
 
 def start_measure(clear_cache=True, cpu_peak=True):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    if device == "cuda":
+    if device == torch.device("cuda"):
         torch.cuda.synchronize()
 
     # Time
@@ -89,7 +89,7 @@ def start_measure(clear_cache=True, cpu_peak=True):
 
     if clear_cache:
         gc.collect()
-        if device == "cuda":
+        if device == torch.device("cuda"):
             torch.cuda.empty_cache()
 
     # CPU mem
@@ -100,7 +100,7 @@ def start_measure(clear_cache=True, cpu_peak=True):
         measures["cpu-peak"] = "Not test"
 
     # GPU mem
-    if device == "cuda":
+    if device == torch.device("cuda"):
         for i in range(torch.cuda.device_count()):
             measures[str(i)] = torch.cuda.memory_allocated(i)
         torch.cuda.reset_peak_memory_stats()
@@ -110,32 +110,32 @@ def start_measure(clear_cache=True, cpu_peak=True):
 
 def end_measure(start_measures, cpu_peak=True):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    if device == "cuda":
+    if device == torch.device("cuda"):
         torch.cuda.synchronize()
 
     # Time
     measures = {"time/s": round(time.time() - start_measures["time"], 3)}
 
     gc.collect()
-    if device == "cuda":
+    if device == torch.device("cuda"):
         torch.cuda.empty_cache()
 
     # CPU mem
-    measures["cpu/GiB"] = round((psutil.Process().memory_info().rss - start_measures["cpu"]) / GB, 3)
+    measures["cpu"] = format_size(psutil.Process().memory_info().rss - start_measures["cpu"])
     if cpu_peak:
-        measures["cpu-peak"] = (cpu_peak_tracker.stop() - start_measures["cpu"]) / GB
+        measures["cpu-peak"] = format_size(cpu_peak_tracker.stop() - start_measures["cpu"])
 
     # GPU mem
-    if device == "cuda":
+    if device == torch.device("cuda"):
         for i in range(torch.cuda.device_count()):
-            measures[str(i)] = (
+            measures["gpu" + str(i)] = format_size(
                                        torch.cuda.memory_allocated(i) - start_measures[
                                    str(i)]
-                               ) / GB
-            measures[f"{i}-peak"] = (
+                               ) 
+            measures["gpu" + f"{i}-peak"] = format_size(
                                             torch.cuda.max_memory_allocated(i) -
                                             start_measures[str(i)]
-                                    ) / GB
+                                    )
 
     return measures
 
@@ -144,11 +144,22 @@ def log_measures(measures, description):
     print(f"{description}:")
     print(f"- Time: {measures['time']:.2f}s")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    if device == "cuda":
+    if device == torch.device("cuda"):
         for i in range(torch.cuda.device_count()):
-            print(f"- GPU {i} allocated: {measures[str(i)]:.3f}GiB")
-            peak = measures[f"{i}-peak"]
+            print(f"- GPU {i} allocated: {measures['gpu' + str(i)]:.3f}GiB")
+            peak = measures["gpu" + f"{i}-peak"]
             print(f"- GPU {i} peak: {peak:.3f}GiB")
     print(f"- CPU RAM allocated: {measures['cpu']:.3f}GiB")
     if 'cpu-peak' in measures:
         print(f"- CPU RAM peak: {measures['cpu-peak']:.3f}GiB")
+
+
+def format_size(size_bytes):
+    if size_bytes < 1024:
+        return f"{size_bytes} B"
+    elif size_bytes < 1024 * 1024:
+        return f"{size_bytes / 1024:.2f} KB"
+    elif size_bytes < 1024 * 1024 * 1024:
+        return f"{size_bytes / (1024 * 1024):.2f} MB"
+    else:
+        return f"{size_bytes / (1024 * 1024 * 1024):.2f} GB"
