@@ -13,7 +13,7 @@ def classification_val(data_loader, model, checkpoint, device=None):
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
-    model.load_state_dict(torch.load(checkpoint))
+    model.load_state_dict(torch.load(checkpoint), strict=True)
     model.eval()
 
     # Compute the flops and params

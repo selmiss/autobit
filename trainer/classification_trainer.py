@@ -16,7 +16,7 @@ class ClassificationTrainer(Trainer):
     epoch: int = 50
     lr: float = 0.001
     momentum: float = 0.9
-    log_period = 10
+    log_period = 150
     device: torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     def __init__(self, model, data_loader, ckp_save_path, ckp_load_path: str = None, device: torch.device = None):

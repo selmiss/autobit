@@ -18,6 +18,12 @@ class BNNConv2d(nn.Module):
         self.number_of_weights = in_channels * out_channels * kernel_size * kernel_size
         self.shape = (out_channels, in_channels, kernel_size, kernel_size)
         self.weight = nn.Parameter(torch.rand(*self.shape) * 0.001, requires_grad=True)
+        
+        if bias:
+            self.bias = nn.Parameter(torch.rand(out_channels) * 0.001, requires_grad=True)
+        else:
+            self.register_parameter('bias', None)
+
 
     def forward(self, x):
         binary_input_no_grad = torch.sign(x)
@@ -29,7 +35,9 @@ class BNNConv2d(nn.Module):
         cliped_weights = torch.clamp(real_weights, -1.0, 1.0)
         binary_weights = binary_weights_no_grad.detach() - cliped_weights.detach() + cliped_weights
         y = F.conv2d(x, binary_weights, stride=self.stride, padding=self.padding)
-
+        
+        if self.bias is not None:
+            y += self.bias.view(1, -1, 1, 1)
         return y
 
 
@@ -48,7 +56,8 @@ class BNNConv1d(nn.Module):
         self.number_of_weights = in_channels * out_channels * kernel_size
         self.shape = (out_channels, in_channels, kernel_size)
         self.weight = nn.Parameter(torch.rand(*self.shape) * 0.001, requires_grad=True)
-
+        self.bias = bias
+        
     def forward(self, x):
         binary_input_no_grad = torch.sign(x)
         cliped_input = torch.clamp(x, -1.0, 1.0)
@@ -59,7 +68,7 @@ class BNNConv1d(nn.Module):
         cliped_weights = torch.clamp(real_weights, -1.0, 1.0)
         binary_weights = binary_weights_no_grad.detach() - cliped_weights.detach() + cliped_weights
         y = F.conv1d(x, binary_weights, stride=self.stride, padding=self.padding)
-
+            
         return y
 
 
