@@ -154,17 +154,6 @@ def log_measures(measures, description):
         print(f"- CPU RAM peak: {measures['cpu-peak']:.3f}GiB")
 
 
-def format_size(size_bytes):
-    if size_bytes < 1024:
-        return f"{size_bytes} B"
-    elif size_bytes < 1024 * 1024:
-        return f"{size_bytes / 1024:.2f} KB"
-    elif size_bytes < 1024 * 1024 * 1024:
-        return f"{size_bytes / (1024 * 1024):.2f} MB"
-    else:
-        return f"{size_bytes / (1024 * 1024 * 1024):.2f} GB"
-
-
 def compute_complexity(model, input_tmp, device="cuda"):
     from thop import profile
     from thop import clever_format
@@ -185,3 +174,14 @@ def log_parameters(model: nn.Module, checkpoint):
             print(f"Parameter Values:")
             print(param)
             print("-------------------------------")
+            
+            
+def format_size(size_bytes):
+    if size_bytes < 1024:
+        return f"{size_bytes} B"
+    elif size_bytes < 1024 * 1024:
+        return f"{size_bytes / 1024:.2f} KB"
+    elif size_bytes < 1024 * 1024 * 1024:
+        return f"{size_bytes / (1024 * 1024):.2f} MB"
+    else:
+        return f"{size_bytes / (1024 * 1024 * 1024):.2f} GB"

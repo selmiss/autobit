@@ -32,8 +32,3 @@ class Cifar10DataLoader(DataLoader):
         # Download dataset to specific path
         torchvision.datasets.CIFAR10(root=target_path, train=self.train, download=True, transform=self.transform)
 
-
-if __name__ == "__main__":
-    loader = Cifar10DataLoader()
-    data_loader0 = loader.build_loader(data_path="../datasets/cifar10")
-
